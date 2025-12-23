@@ -6,7 +6,11 @@ import org.springframework.data.jpa.domain.Specification;
 import com.productdistribution.backend.entities.StockAssignment;
 import com.productdistribution.backend.repositories.criteria.StockAssignmentCriteria;
 
-public class StockAssignmentSpecifications {
+public final class StockAssignmentSpecifications {
+
+    private StockAssignmentSpecifications() {
+        // Utility class - prevent instantiation
+    }
 
     public static Specification<StockAssignment> withCriteria(StockAssignmentCriteria criteria) {
         return (root, query, cb) -> {
