@@ -57,7 +57,7 @@ public class MetricsService {
 
     @Cacheable(value = "detailedMetrics", key = "#criteria.warehouseId + '_' + #criteria.storeId + '_' + #criteria.productId")
     public DetailedMetricsDTO calculateDetailedMetrics(StockAssignmentCriteria criteria) {
-        logger.info("Calculating detailed metrics with filters: {}", criteria);
+        logger.info("Calculating detailed metrics");
         
         try {
             String warehouseId = criteria.getWarehouseId();

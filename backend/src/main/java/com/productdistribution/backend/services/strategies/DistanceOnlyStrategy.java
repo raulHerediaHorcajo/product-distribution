@@ -9,7 +9,6 @@ import com.productdistribution.backend.services.GeoDistanceService;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Strategy that orders warehouses solely by distance.
@@ -36,6 +35,6 @@ public class DistanceOnlyStrategy implements WarehouseSelectionStrategy {
                 return new WarehouseWithDistance(warehouse, distance);
             })
             .sorted(Comparator.comparingDouble(WarehouseWithDistance::distanceKm))
-            .collect(Collectors.toList());
+            .toList();
     }
 }
