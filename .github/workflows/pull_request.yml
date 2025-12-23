@@ -1,4 +1,4 @@
-name: Pull Request - Analysis
+name: Pull Request - Test & Analysis
 
 on:
   pull_request:
@@ -33,10 +33,60 @@ jobs:
 
       - name: Build Angular app
         run: npm run build
+  
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: product_distribution_db
+          POSTGRES_USER: product_distribution
+          POSTGRES_PASSWORD: product_distribution
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests with coverage
+        working-directory: ./backend
+        env:
+          SPRING_PROFILES_ACTIVE: dev
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/product_distribution_db
+          SPRING_DATASOURCE_USERNAME: product_distribution
+          SPRING_DATASOURCE_PASSWORD: product_distribution
+          DATA_PRODUCTS_PATH: ${{ github.workspace }}/data/products.json
+          DATA_STORES_PATH: ${{ github.workspace }}/data/stores.json
+          DATA_WAREHOUSES_PATH: ${{ github.workspace }}/data/warehouses.json
+        run: mvn -B clean verify
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage
+          path: backend/target/site/jacoco/
+          retention-days: 1
 
   sonar-backend:
     name: Sonar Analysis Backend
     runs-on: ubuntu-latest
+    needs: test-backend
     
     steps:
       - name: Checkout code
@@ -50,6 +100,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+      
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-coverage
+          path: backend/target/site/jacoco/
 
       - name: Cache Sonar packages
         uses: actions/cache@v4
@@ -60,7 +116,7 @@ jobs:
 
       - name: Run Sonar Scanner
         working-directory: ./backend
-        run: mvn -B clean compile sonar:sonar
+        run: mvn -B compile sonar:sonar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
