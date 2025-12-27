@@ -71,9 +71,6 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/product_distribution_db
           SPRING_DATASOURCE_USERNAME: product_distribution
           SPRING_DATASOURCE_PASSWORD: product_distribution
-          DATA_PRODUCTS_PATH: ${{ github.workspace }}/data/products.json
-          DATA_STORES_PATH: ${{ github.workspace }}/data/stores.json
-          DATA_WAREHOUSES_PATH: ${{ github.workspace }}/data/warehouses.json
         run: mvn -B clean verify
 
       - name: Upload coverage reports
