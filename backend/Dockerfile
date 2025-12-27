@@ -12,13 +12,10 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/target/*.jar app.jar
-# In development (docker-compose): volume mount will override these files
-# In production (Render): these files will be available in the container
-COPY data/*.json /app/data/
 
 # Create non-root user
-RUN groupadd -r spring && useradd -r -g spring spring
-RUN chown -R spring:spring /app
+RUN groupadd -r spring && useradd -r -g spring spring && \
+chown -R spring:spring /app
 USER spring:spring
 
 EXPOSE 8080
