@@ -7,53 +7,66 @@ import com.productdistribution.backend.entities.Store;
 import com.productdistribution.backend.entities.Warehouse;
 import com.productdistribution.backend.exceptions.DataLoadingException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 @Service
 public class JsonDataLoaderService implements DataLoaderService {
 
-    @Value("${data.products.path}")
-    private String productsFilePath;
-    @Value("${data.stores.path}")
-    private String storesFilePath;
-    @Value("${data.warehouses.path}")
-    private String warehousesFilePath;
+    @Value("${data.products.url}")
+    private String productsUrl;
+    @Value("${data.stores.url}")
+    private String storesUrl;
+    @Value("${data.warehouses.url}")
+    private String warehousesUrl;
 
     private final ObjectMapper objectMapper;
+    private final WebClient webClient;
 
-    public JsonDataLoaderService(ObjectMapper objectMapper) {
+    @Autowired
+    public JsonDataLoaderService(ObjectMapper objectMapper, WebClient webClient) {
         this.objectMapper = objectMapper;
+        this.webClient = webClient;
     }
 
     @Override
     public List<Product> loadProducts() {
-        try {
-            return objectMapper.readValue(new File(productsFilePath), new TypeReference<List<Product>>() {});
-        } catch (IOException ex) {
-            throw new DataLoadingException("Error loading products from file: " + productsFilePath, ex);
-        }
+        return loadFromUrl(productsUrl, new TypeReference<List<Product>>() {});
     }
 
     @Override
     public List<Store> loadStores() {
-        try {
-            return objectMapper.readValue(new File(storesFilePath), new TypeReference<List<Store>>() {});
-        } catch (IOException ex) {
-            throw new DataLoadingException("Error loading stores from file: " + storesFilePath, ex);
-        }
+        return loadFromUrl(storesUrl, new TypeReference<List<Store>>() {});
     }
 
     @Override
     public List<Warehouse> loadWarehouses() {
+        return loadFromUrl(warehousesUrl, new TypeReference<List<Warehouse>>() {});
+    }
+
+    private <T> T loadFromUrl(String url, TypeReference<T> typeReference) {
         try {
-            return objectMapper.readValue(new File(warehousesFilePath), new TypeReference<List<Warehouse>>() {});
+            String jsonContent = webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+            
+            if (jsonContent == null || jsonContent.trim().isEmpty()) {
+                throw new DataLoadingException("Empty response from URL: " + url);
+            }
+            
+            return objectMapper.readValue(jsonContent, typeReference);
+        } catch (WebClientException ex) {
+            throw new DataLoadingException("HTTP error loading from URL: " + url, ex);
         } catch (IOException ex) {
-            throw new DataLoadingException("Error loading warehouses from file: " + warehousesFilePath, ex);
+            throw new DataLoadingException("JSON parsing error loading from URL: " + url, ex);
         }
     }
 }
