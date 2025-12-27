@@ -28,11 +28,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/product_distribution_db
       SPRING_DATASOURCE_USERNAME: product_distribution
       SPRING_DATASOURCE_PASSWORD: product_distribution
-      DATA_PRODUCTS_PATH: /app/data/products.json
-      DATA_STORES_PATH: /app/data/stores.json
-      DATA_WAREHOUSES_PATH: /app/data/warehouses.json
-    volumes:
-      - ./data:/app/data:ro
     depends_on:
       postgres:
         condition: service_healthy
