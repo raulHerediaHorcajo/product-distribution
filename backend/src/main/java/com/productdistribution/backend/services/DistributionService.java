@@ -116,7 +116,7 @@ public class DistributionService {
                 adjustedDemand -= quantityToSend;
                 warehouseItem.reduceQuantity(quantityToSend);
                 
-                logger.debug("Assigning {} units of product {} size {} to store {} from warehouse {} (distance: {:.2f} km)",
+                logger.debug("Assigning {} units of product {} size {} to store {} from warehouse {} (distance: {} km)",
                     quantityToSend, productId, size, store.getId(), warehouse.getId(), warehouseWithDistance.distanceKm());
                 
                 assignments.add(new StockAssignment(
